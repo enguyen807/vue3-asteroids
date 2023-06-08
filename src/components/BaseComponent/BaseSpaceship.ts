@@ -1,22 +1,7 @@
-import { reactive } from 'vue';
+import { reactive, type Ref } from 'vue';
+import type { ShipProperties, CanvasSize } from "@/core/interfaces/AsteroidInterface";
 
-interface ShipThrust {
-  x: number,
-  y: number
-}
-
-interface ShipProperties{
-  x: number,
-  y: number,
-  r: number,
-  a: number,
-  rotate: number,
-  thrusting: boolean,
-  thrust: ShipThrust
-}
-
-export default function createSpaceship(CANVAS_SIZE, ctx) {
-    const FPS: number = 30; // frames per second 
+export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ctx: Ref) {
     const FRICTION: number = 0.7 // friction coefficient of space (0 = no friction, 1 - lots of friction)
     const SHIP_SIZE: number = 30; // ship height in pixels
     const TURN_SPEED: number = 360; // turn speed in degrees per sec
@@ -182,6 +167,8 @@ export default function createSpaceship(CANVAS_SIZE, ctx) {
     }
 
     return {
+        ship,
+        SHIP_SIZE,
         handleDrawShip,
         handleRotateShip,
         handleShipThrust,
