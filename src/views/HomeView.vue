@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
-import createSpaceship from "@/components/BaseComponent/BaseSpaceship.ts";
+import createSpaceship from "@/components/BaseComponent/BaseSpaceship";
+import createAsteroids from "@/components/BaseComponent/BaseAsteroids";
+import type { CanvasSize } from "@/core/interfaces/AsteroidInterface";
 
-const CANVAS_SIZE: {width: number, height: number} = {
+const FPS: number = 30; // frames per second
+const CANVAS_SIZE: CanvasSize = {
   width: 700,
   height: 500
 };
@@ -22,6 +25,8 @@ const handleDrawSpace = (): void => {
 }
 
 const {
+    ship,
+    SHIP_SIZE,
     handleDrawShip,
     handleRotateShip,
     handleShipThrust,
@@ -29,7 +34,9 @@ const {
     handleMoveShip,
     handleKeyDown,
     handleKeyUp
-} = createSpaceship(CANVAS_SIZE, ctx);
+} = createSpaceship(FPS, CANVAS_SIZE, ctx);
+
+const { handleDrawAsteroids, createAsteroidBelt } = createAsteroids(FPS, CANVAS_SIZE, ctx, ship, SHIP_SIZE);
 
 const init = (): void => {
   handleDrawSpace();
@@ -37,15 +44,17 @@ const init = (): void => {
   handleRotateShip(),
   handleShipThrust(),
   handleScreenEdge(),
-  handleMoveShip()
+  handleMoveShip(),
+  handleDrawAsteroids();
 }
 
-const { pause, resume, isActive } = useIntervalFn(init, 1000 / 30);
+const { pause, resume, isActive } = useIntervalFn(init, 1000 / FPS);
 
 onMounted(() => {
   ctx.value = gameCanvas.value!.getContext("2d");
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("keyup", handleKeyUp);
+  createAsteroidBelt();
 })
 </script>
 
