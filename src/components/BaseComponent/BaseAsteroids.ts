@@ -61,9 +61,9 @@ export default function createAsteroids(FPS: number, CANVAS_SIZE: CanvasSize, ct
     * handleDrawAsteroids
     */
     const handleDrawAsteroids = (): void => {
-        ctx.value!.strokeStyle = "slategrey";
-        ctx.value!.lineWidth = SHIP_SIZE / 20;
         for (let i = 0; i < roids.value.length; i++) {
+            ctx.value!.strokeStyle = "slategrey";
+            ctx.value!.lineWidth = SHIP_SIZE / 20;
             let { x, y, r, a, vert, offs } = roids.value[i];
         
             // draw a path 
@@ -101,6 +101,8 @@ export default function createAsteroids(FPS: number, CANVAS_SIZE: CanvasSize, ct
     }
 
     return {
+        roids,
+        distBetweenPoints,
         handleDrawAsteroids,
         createAsteroidBelt
     }
