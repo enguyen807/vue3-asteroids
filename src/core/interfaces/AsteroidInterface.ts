@@ -24,6 +24,9 @@ export interface ShipProperties{
     y: number,
     r: number,
     a: number,
+    blinkTime: number,
+    blinkNum: number,
+    explodeTime: number,
     rotate: number,
     thrusting: boolean,
     thrust: ShipThrust
