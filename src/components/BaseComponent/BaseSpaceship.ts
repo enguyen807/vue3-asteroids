@@ -1,24 +1,31 @@
-import { reactive, type Ref } from 'vue';
+import { reactive, type Ref, onMounted } from 'vue';
 import type { ShipProperties, CanvasSize } from "@/core/interfaces/AsteroidInterface";
 
 export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ctx: Ref) {
-    const FRICTION: number = 0.7 // friction coefficient of space (0 = no friction, 1 - lots of friction)
+    const FRICTION: number = 0.9 // friction coefficient of space (0 = no friction, 1 - lots of friction)
     const SHIP_SIZE: number = 30; // ship height in pixels
     const TURN_SPEED: number = 360; // turn speed in degrees per sec
     const SHIP_ACCEL: number = 5; // acceleration of ship in pixels per second 
-
-    const ship: ShipProperties = reactive({
+    const SHIP_EXPLODE_DUR: number = 10; // duration of the ship's explosion
+    const SHIP_INVULNERABLE_DUR: number = 3; // duration of the ship's invulnerability
+    const SHIP_BLINK_DUR = 0.1; // duration of ship's blink during invulnerability
+    const INITIAL_SHIP_STATE: ShipProperties = {
         x: CANVAS_SIZE.width / 2,
         y: CANVAS_SIZE.height / 2,
         r: SHIP_SIZE / 2,
-        a: 90 / 180 * Math.PI, // convert to radians 
+        a: 90 / 180 * Math.PI,
+        blinkTime: Math.ceil(SHIP_BLINK_DUR * FPS),
+        blinkNum: Math.ceil(SHIP_INVULNERABLE_DUR / SHIP_BLINK_DUR),
+        explodeTime: 0,
         rotate: 0,
         thrusting: false,
         thrust: {
           x: 0,
           y: 0
         }
-    });
+    }
+
+    const ship: ShipProperties = reactive({...INITIAL_SHIP_STATE});
 
     /**
      * handleDrawShip - draws the ship
@@ -44,14 +51,32 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
         ctx.value!.closePath();
         ctx.value!.stroke();
     }
-  
+    
+
+    const handleCreateShipExplosion = () => {
+        const explosionColours = ['darkred', 'red', 'orange', 'yellow', 'white'];
+        let initialR = 1.7;
+        for(let i = 0; i < explosionColours.length; i++) {
+            ctx.value!.fillStyle = explosionColours[i];
+            ctx.value!.beginPath();
+            ctx.value!.arc(ship.x, ship.y, (initialR -= 0.3) * ship.r, 0, 2 * Math.PI, false);
+            ctx.value!.fill();
+        }
+    }
+
+    
     /**
-     * handleCentreDot - sets the middle of the ship
-     * @return void;
+     * handleShipExplosion - Set ship's status to explosion
      */
-    const handleCentreDot = (): void => {
-        ctx.value!.fillStyle = "red";
-        ctx.value!.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+    const handleExplodeShip = () => {
+        // ctx.value!.fillStyle = "lime";
+        // ctx.value!.strokeStyle = "lime";
+        // ctx.value!.beginPath();
+        // ctx.value!.arc(ship.x, ship.y, ship.r, 0, 2 * Math.PI, false);
+        // ctx.value!.fill();
+        // ctx.value!.stroke();
+      
+        ship.explodeTime = Math.ceil(SHIP_EXPLODE_DUR * 2)
     }
   
     /**
@@ -168,13 +193,17 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
 
     return {
         ship,
+        INITIAL_SHIP_STATE,
         SHIP_SIZE,
+        SHIP_BLINK_DUR,
         handleDrawShip,
         handleRotateShip,
         handleShipThrust,
         handleScreenEdge,
         handleMoveShip,
         handleKeyDown,
-        handleKeyUp
+        handleKeyUp,
+        handleExplodeShip,
+        handleCreateShipExplosion,
     };
 }
