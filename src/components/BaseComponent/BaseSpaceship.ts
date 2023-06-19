@@ -68,14 +68,7 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
     /**
      * handleShipExplosion - Set ship's status to explosion
      */
-    const handleExplodeShip = () => {
-        // ctx.value!.fillStyle = "lime";
-        // ctx.value!.strokeStyle = "lime";
-        // ctx.value!.beginPath();
-        // ctx.value!.arc(ship.x, ship.y, ship.r, 0, 2 * Math.PI, false);
-        // ctx.value!.fill();
-        // ctx.value!.stroke();
-      
+    const handleExplodeShip = () => {      
         ship.explodeTime = Math.ceil(SHIP_EXPLODE_DUR * 2)
     }
   
