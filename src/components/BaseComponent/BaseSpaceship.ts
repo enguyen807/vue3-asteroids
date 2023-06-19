@@ -114,15 +114,15 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
      * @return void;
      */
     const handleShipThrust = (): void => {
-            if (ship.thrusting) {
-                ship.thrust.x += SHIP_ACCEL * Math.cos(ship.a) / FPS;
-                ship.thrust.y -= SHIP_ACCEL * Math.sin(ship.a) / FPS;
-                handleDrawThrusters();
-            } else {
-                ship.thrust.x -= FRICTION * ship.thrust.x / FPS
-                ship.thrust.y -= FRICTION * ship.thrust.y / FPS
-            }
+        if (ship.thrusting) {
+            ship.thrust.x += SHIP_ACCEL * Math.cos(ship.a) / FPS;
+            ship.thrust.y -= SHIP_ACCEL * Math.sin(ship.a) / FPS;
+            handleDrawThrusters();
+        } else {
+            ship.thrust.x -= FRICTION * ship.thrust.x / FPS
+            ship.thrust.y -= FRICTION * ship.thrust.y / FPS
         }
+    }
 
     /**
      * handleScreenEdge - handles what happens when screen approaches edge of screen
@@ -175,15 +175,15 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
      */
     const handleKeyUp = (ev: KeyboardEvent): void => {
         switch (ev.code) {
-        case "ArrowLeft": // stop rotating left
-            ship.rotate = 0;
-            break;
-        case "ArrowUp": // stop moving forward
-            ship.thrusting = false;
-            break;
-        case "ArrowRight": // stop rotating right
-            ship.rotate = 0;
-            break;
+            case "ArrowLeft": // stop rotating left
+                ship.rotate = 0;
+                break;
+            case "ArrowUp": // stop moving forward
+                ship.thrusting = false;
+                break;
+            case "ArrowRight": // stop rotating right
+                ship.rotate = 0;
+                break;
         }
     }
 
