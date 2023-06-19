@@ -2,7 +2,10 @@ import { reactive, type Ref, onMounted } from 'vue';
 import type { ShipProperties, CanvasSize } from "@/core/interfaces/AsteroidInterface";
 
 export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ctx: Ref) {
-    const FRICTION: number = 0.9 // friction coefficient of space (0 = no friction, 1 - lots of friction)
+    const LASER_MAX: number = 10; // max number of laser on the screen
+    const LASER_SPD: number = 500; // speed of lasers in pixels per second
+
+    const FRICTION: number = 0.9; // friction coefficient of space (0 = no friction, 1 - lots of friction)
     const SHIP_SIZE: number = 30; // ship height in pixels
     const TURN_SPEED: number = 360; // turn speed in degrees per sec
     const SHIP_ACCEL: number = 5; // acceleration of ship in pixels per second 
@@ -23,7 +26,7 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
           x: 0,
           y: 0
         }
-    }
+    };
 
     const ship: ShipProperties = reactive({...INITIAL_SHIP_STATE});
 
@@ -154,15 +157,15 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
      */
     const handleKeyDown = (ev: KeyboardEvent): void => {
         switch (ev.code) {
-        case "ArrowLeft": // left arrow (rotate ship left)
-            ship.rotate = TURN_SPEED / 180 * Math.PI / FPS;
-            break;
-        case "ArrowUp": // thrust ship forward
-            ship.thrusting = true;
-            break;
-        case "ArrowRight": // right arrow (rotate ship right)
-            ship.rotate = -TURN_SPEED / 180 * Math.PI / FPS;
-            break;        
+            case "ArrowLeft": // left arrow (rotate ship left)
+                ship.rotate = TURN_SPEED / 180 * Math.PI / FPS;
+                break;
+            case "ArrowUp": // thrust ship forward
+                ship.thrusting = true;
+                break;
+            case "ArrowRight": // right arrow (rotate ship right)
+                ship.rotate = -TURN_SPEED / 180 * Math.PI / FPS;
+                break;        
         }
     }
   
