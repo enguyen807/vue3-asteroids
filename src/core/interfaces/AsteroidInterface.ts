@@ -18,8 +18,17 @@ export interface ShipThrust {
     x: number,
     y: number
 }
+
+export interface LaserProperties { 
+    x: number,
+    y: number,
+    xv: number,
+    yv: number,
+    dist: number,
+    explodeTime: number,
+}
   
-export interface ShipProperties{
+export interface ShipProperties {
     x: number,
     y: number,
     r: number,
@@ -29,5 +38,7 @@ export interface ShipProperties{
     explodeTime: number,
     rotate: number,
     thrusting: boolean,
-    thrust: ShipThrust
+    thrust: ShipThrust,
+    canShoot: boolean,
+    lasers: Array<LaserProperties>,
 }  

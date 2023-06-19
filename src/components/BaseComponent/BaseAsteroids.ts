@@ -17,13 +17,13 @@ export default function createAsteroids(FPS: number, CANVAS_SIZE: CanvasSize, ct
      * @param y - y coord of asteroid
      * @return Asteroid
      */
-    const newAsteroid = (x: number, y: number): Asteroid => {
+    const newAsteroid = (x: number, y: number, r: number): Asteroid => {
         let roid: Asteroid = {
             x: x,
             y: y,
             xv: Math.random() * ROIDS_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
             yv: Math.random() * ROIDS_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
-            r: ROIDS_SIZE / 2,
+            r: r,
             a: Math.random() * Math.PI * 2,
             vert: Math.floor(Math.random() * (ROIDS_VERT + 1) + ROIDS_VERT / 2),
             offs: []
@@ -37,8 +37,66 @@ export default function createAsteroids(FPS: number, CANVAS_SIZE: CanvasSize, ct
         return roid;
     }
   
+    /**
+     * distBetweenPoints - calculate the distance ship and asteroid
+     * @param x1 number
+     * @param y1 number
+     * @param x2 number
+     * @param y2 number
+     */
     const distBetweenPoints = (x1: number, y1: number, x2: number, y2: number): number => {
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
+    /**
+     * handleDetectLaserHit
+     */
+    const handleDetectLaserHit = (): void => {
+        let ax, ay, ar, lx, ly;
+        for (let i = roids.value.length - 1; i >= 0; i--) {
+            //grab the astroids props 
+            ax = roids.value[i].x;
+            ay = roids.value[i].y;
+            ar = roids.value[i].r;
+
+            //loop over the lasers 
+            for (let j = ship.lasers.length - 1; j >= 0; j--) {
+                // grab laser props
+                lx = ship.lasers[j].x;
+                ly = ship.lasers[j].y;
+
+                // detect hits
+                if (ship.lasers[j].explodeTime === 0 && distBetweenPoints(ax, ay, lx, ly) < ar) {
+                    // removes the asteroid
+                    handleDestroyAsteroid(i);
+                    ship.lasers[j].explodeTime = Math.ceil(0.1 * FPS)
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * handleDestroyAsteroid - destroys the asteroid from laser hit
+     * @param index number
+     */
+    const handleDestroyAsteroid = (index: number): void => {
+        let x = roids.value[index].x;
+        let y = roids.value[index].y;
+        let r = roids.value[index].r;
+
+        // split the asteroid in two
+        if (r === Math.ceil(ROIDS_SIZE / 2)) {
+            roids.value.push(newAsteroid(x, y, Math.ceil(ROIDS_SIZE / 4)));
+            roids.value.push(newAsteroid(x, y, Math.ceil(ROIDS_SIZE / 4)));
+        } else if (r === Math.ceil(ROIDS_SIZE / 4)) {
+            roids.value.push(newAsteroid(x, y, Math.ceil(ROIDS_SIZE / 8)));
+            roids.value.push(newAsteroid(x, y, Math.ceil(ROIDS_SIZE / 8)));
+        }
+
+        //destroy the asteroid 
+        roids.value.splice(index, 1);
+
     }
   
     /**
@@ -53,7 +111,7 @@ export default function createAsteroids(FPS: number, CANVAS_SIZE: CanvasSize, ct
                 x = Math.floor(Math.random() * CANVAS_SIZE.width);
                 y = Math.floor(Math.random() * CANVAS_SIZE.height);
             } while (distBetweenPoints(ship.x, ship.y, x, y) < ROIDS_SIZE * 2 + ship.r);
-            roids.value.push(newAsteroid(x, y));
+            roids.value.push(newAsteroid(x, y, Math.ceil(ROIDS_SIZE / 2)));
         }
     }
   
@@ -102,8 +160,10 @@ export default function createAsteroids(FPS: number, CANVAS_SIZE: CanvasSize, ct
 
     return {
         roids,
+        handleDetectLaserHit,
         distBetweenPoints,
         handleDrawAsteroids,
+        handleDestroyAsteroid,
         createAsteroidBelt
     }
 }

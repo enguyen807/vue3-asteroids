@@ -23,6 +23,8 @@ const {
     SHIP_SIZE,
     INITIAL_SHIP_STATE,
     SHIP_BLINK_DUR,
+    handleDrawLaser,
+    handleLaserMovement,
     handleDrawShip,
     handleRotateShip,
     handleShipThrust,
@@ -34,7 +36,14 @@ const {
     handleCreateShipExplosion,
 } = createSpaceship(FPS, CANVAS_SIZE, ctx);
 
-const { handleDrawAsteroids, createAsteroidBelt, roids, distBetweenPoints } = createAsteroids(FPS, CANVAS_SIZE, ctx, ship, SHIP_SIZE);
+const { 
+  handleDrawAsteroids, 
+  createAsteroidBelt, 
+  roids, 
+  distBetweenPoints, 
+  handleDetectLaserHit,
+  handleDestroyAsteroid
+} = createAsteroids(FPS, CANVAS_SIZE, ctx, ship, SHIP_SIZE);
 
 /**
  * handleDrawSpace - draws space of the canvas
@@ -60,8 +69,6 @@ const handleDebug = (): void => {
   }
 }
 
-
-
 /**
  * handleCheckCollision - check collision between asteroid and ship
  * @return void
@@ -70,6 +77,8 @@ const handleCheckCollision = (): void => {
   for (let i = 0; i < roids.value.length; i++) {
     if (distBetweenPoints(ship.x, ship.y, roids.value[i].x, roids.value[i].y) < ship.r + roids.value[i].r) {
       handleExplodeShip();
+      handleDestroyAsteroid(i);
+      break;
     }
   }
 }
@@ -84,6 +93,9 @@ const init = (): void => {
   if (!exploding) {
     handleRotateShip();
     handleMoveShip();
+    handleDetectLaserHit();
+    handleDrawLaser();
+    handleLaserMovement();
     if (blinkOn) {
       handleDrawShip();
       handleShipThrust();

@@ -4,6 +4,8 @@ import type { ShipProperties, CanvasSize } from "@/core/interfaces/AsteroidInter
 export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ctx: Ref) {
     const LASER_MAX: number = 10; // max number of laser on the screen
     const LASER_SPD: number = 500; // speed of lasers in pixels per second
+    const LASER_DIST: number = 0.4; // max distance laser can travel as fraction of screen width
+    const LASER_EXPLODE_DUR: number = 0.1; // duration of the lasers' explosion in seconds
 
     const FRICTION: number = 0.9; // friction coefficient of space (0 = no friction, 1 - lots of friction)
     const SHIP_SIZE: number = 30; // ship height in pixels
@@ -25,7 +27,9 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
         thrust: {
           x: 0,
           y: 0
-        }
+        },
+        canShoot: true,
+        lasers: []
     };
 
     const ship: ShipProperties = reactive({...INITIAL_SHIP_STATE});
@@ -40,16 +44,16 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
         ctx.value!.lineWidth = SHIP_SIZE / 20;
         ctx.value!.beginPath();
         ctx.value!.moveTo( // nose of the ship
-        ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
-        ship.y - 4 / 3 * ship.r * Math.sin(ship.a)
+            ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+            ship.y - 4 / 3 * ship.r * Math.sin(ship.a)
         );
         ctx.value!.lineTo( // rear left
-        ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
-        ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
         );
         ctx.value!.lineTo( // rear right
-        ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
-        ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
         );
         ctx.value!.closePath();
         ctx.value!.stroke();
@@ -93,16 +97,16 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
         ctx.value!.lineWidth = SHIP_SIZE / 10;
         ctx.value!.beginPath();
         ctx.value!.moveTo( // rear left
-        ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),
-        ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - 0.5 * Math.cos(ship.a))
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - 0.5 * Math.cos(ship.a))
         );
         ctx.value!.lineTo( // rear center behind ship
-        ship.x - ship.r * 6 / 3 * Math.cos(ship.a),
-        ship.y + ship.r * 6 / 3 * Math.sin(ship.a)
+            ship.x - ship.r * 6 / 3 * Math.cos(ship.a),
+            ship.y + ship.r * 6 / 3 * Math.sin(ship.a)
         );
         ctx.value!.lineTo( // rear right
-        ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),
-        ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + 0.5 * Math.cos(ship.a))
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + 0.5 * Math.cos(ship.a))
         );
         ctx.value!.closePath();
         ctx.value!.fill();
@@ -150,6 +154,111 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
         ship.x += ship.thrust.x;
         ship.y += ship.thrust.y;
     }
+
+    /**
+     * handleLaserMovement - move lasers
+     * @return void;
+     */
+    const handleLaserMovement = (): void => {
+        for (let i = ship.lasers.length - 1; i >= 0; i--) {
+            // check distance traveled
+            if (ship.lasers[i].dist > LASER_DIST * CANVAS_SIZE.width) {
+                ship.lasers.splice(i, 1);
+                continue;
+            }
+
+            if (ship.lasers[i].explodeTime > 0) {
+                ship.lasers[i].explodeTime--;
+
+                // destroy the laser when duration is up
+                if (ship.lasers[i].explodeTime === 0) {
+                    ship.lasers.splice(i, 1);
+                    continue;
+                }
+
+            } else {
+                // move lasers
+                ship.lasers[i].x += ship.lasers[i].xv;
+                ship.lasers[i].y += ship.lasers[i].yv;
+
+                // calc distance of laser travel    
+                ship.lasers[i].dist += Math.sqrt(Math.pow(ship.lasers[i].xv, 2) + Math.pow(ship.lasers[i].yv, 2))
+            }
+
+            // handle edge of screen
+            if (ship.lasers[i].x < 0) {
+                ship.lasers[i].x = CANVAS_SIZE.width;
+            } else if (ship.lasers[i].x > CANVAS_SIZE.width) {
+                ship.lasers[i].x = 0;
+            }
+
+            if (ship.lasers[i].y < 0) {
+                ship.lasers[i].y = CANVAS_SIZE.height;
+            } else if (ship.lasers[i].y > CANVAS_SIZE.height) {
+                ship.lasers[i].y = 0;
+            }
+        }
+    }
+
+    /**
+     * handleDrawLaser - draw lasers
+     * @return void;
+     */
+    const handleDrawLaser = (): void => {
+        for (let i = 0; i < ship.lasers.length; i++) {
+            const { x, y } = ship.lasers[i];
+
+            if (ship.lasers[i].explodeTime === 0) {
+                ctx.value!.beginPath();
+                ctx.value!.arc(x, y, SHIP_SIZE / 15, 0, Math.PI * 2, false);
+                ctx.value!.lineWidth = 5;
+
+                ctx.value!.strokeStyle = "salmon";
+                ctx.value!.stroke();
+            } else {
+                // draw the explosion
+                ctx.value!.fillStyle = "orangered";
+                ctx.value!.beginPath();
+                ctx.value!.arc(x, y, ship.r * 0.75, 0, Math.PI * 2, false);
+                ctx.value!.fill();
+
+                ctx.value!.fillStyle = "salmon";
+                ctx.value!.beginPath();
+                ctx.value!.arc(x, y, ship.r * 0.5, 0, Math.PI * 2, false);
+                ctx.value!.fill();
+
+                ctx.value!.fillStyle = "pink";
+                ctx.value!.beginPath();
+                ctx.value!.arc(x, y, ship.r * 0.25, 0, Math.PI * 2, false);
+                ctx.value!.fill();
+            }
+
+
+        }
+    }
+
+    /**
+     * handleShootLaser - shoots laser
+     * @return void;
+     */
+    const handleShootLaser = (): void => {
+        //create laser object
+        
+        // check if ship can shoot && laser array is less than max lasers on screen
+        if (ship.canShoot && ship.lasers.length < LASER_MAX) {
+            ship.lasers.push({
+                x: ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+                y: ship.y - 4 / 3 * ship.r * Math.sin(ship.a),
+                xv: LASER_SPD * Math.cos(ship.a) / FPS,
+                yv: -LASER_SPD * Math.sin(ship.a) / FPS,
+                dist: 0,
+                explodeTime: 0
+            });
+        }
+
+        // prevent further shooting
+        ship.canShoot = false;
+    }
   
     /**
      * handleKeyDown 
@@ -157,6 +266,9 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
      */
     const handleKeyDown = (ev: KeyboardEvent): void => {
         switch (ev.code) {
+            case "Space": // shoot laser once per keydown. Once keyup is fired then shooting is enabled again
+                handleShootLaser();
+                break;
             case "ArrowLeft": // left arrow (rotate ship left)
                 ship.rotate = TURN_SPEED / 180 * Math.PI / FPS;
                 break;
@@ -175,6 +287,9 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
      */
     const handleKeyUp = (ev: KeyboardEvent): void => {
         switch (ev.code) {
+            case "Space": // laser will fire only once per keydown, keyup will enable shoot laser
+                ship.canShoot = true;
+                break;            
             case "ArrowLeft": // stop rotating left
                 ship.rotate = 0;
                 break;
@@ -192,6 +307,8 @@ export default function createSpaceship(FPS: number, CANVAS_SIZE: CanvasSize, ct
         INITIAL_SHIP_STATE,
         SHIP_SIZE,
         SHIP_BLINK_DUR,
+        handleLaserMovement,
+        handleDrawLaser,
         handleDrawShip,
         handleRotateShip,
         handleShipThrust,
